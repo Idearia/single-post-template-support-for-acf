@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: Support for Custom Post Templates in ACF
+Plugin Name: Support for Single Post Templates in ACF
 Plugin URI: github.com/lukechapman/custom-post-template-support-for-acf
-Description: Adds a post template location rule to ACF for themes using the Custom Post Template plugin
-Version: 1.2
-Author: Luke Chapman
-Author URI: www.iamlukechapman.com
+Description: Adds a post template location rule to ACF for themes using the Single Post Template plugin
+Version: 1.2.1
+Author: Diego Vagnoli
+Author URI: https://github.com/bluantinoo/
 */
 
 // Get post templates
@@ -14,10 +14,10 @@ function get_post_templates(){
   $post_templates = array();
   $files = (array) $theme->get_files( 'php', 1 );
   foreach ( $files as $file => $full_path ) {
-  	$headers = get_file_data( $full_path, array( 'Template Name Posts' => 'Template Name Posts' ) );
-    if ( empty( $headers['Template Name Posts'] ) )
+  	$headers = get_file_data( $full_path, array( 'Single Post Template' => 'Single Post Template' ) );
+    if ( empty( $headers['Single Post Template'] ) )
     continue;
-    $post_templates[ $file ] = $headers['Template Name Posts'];
+    $post_templates[ $file ] = $headers['Single Post Template'];
   }
   return $post_templates;
 } 
@@ -46,7 +46,7 @@ function acf_location_rules_match_cpt( $match, $rule, $options ){
   if(isset($options['cpt'])){
     $current_post_template = $options['cpt'];	
   }else{
-    $current_post_template = get_post_meta($post->ID,'custom_post_template',true);
+    $current_post_template = get_post_meta($post->ID,'_wp_post_template',true);
   }
   $selected_post_template = $rule['value'];
   if($rule['operator'] == "=="){
@@ -60,7 +60,12 @@ function acf_location_rules_match_cpt( $match, $rule, $options ){
 // Add js to admin header to trigger ACFs
 add_action('admin_head', 'acf_custom_post_template_js');
 function acf_custom_post_template_js() {
-  echo "<script>jQuery('#custom_post_template').live('change', function(){ acf.screen['cpt'] = jQuery(this).val(); jQuery(document).trigger('acf/update_field_groups');});</script> \n";
+  echo "<script>
+  		jQuery(function($){
+			$('#post_template').live('change', function(){ 
+				acf.ajax.update( 'cpt', jQuery(this).val() ).fetch();
+			});
+		});
+	</script>\n";
 }
-
 ?>
